@@ -20,11 +20,12 @@ def get_one(item_id: int) -> dict | None:
     return _items.get(item_id)
 
 
-def create(name: str, description: str = "") -> dict:
+def create(name: str, description: str = "", status: str = "active") -> dict:
     item = {
         "id": _next_id(),
         "name": name,
         "description": description,
+        "status": status,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": None,
     }
@@ -32,7 +33,7 @@ def create(name: str, description: str = "") -> dict:
     return item
 
 
-def update(item_id: int, name: str | None = None, description: str | None = None) -> dict | None:
+def update(item_id: int, name: str | None = None, description: str | None = None, status: str | None = None) -> dict | None:
     item = _items.get(item_id)
     if item is None:
         return None
@@ -40,6 +41,8 @@ def update(item_id: int, name: str | None = None, description: str | None = None
         item["name"] = name
     if description is not None:
         item["description"] = description
+    if status is not None:
+        item["status"] = status
     item["updated_at"] = datetime.now(timezone.utc).isoformat()
     return item
 

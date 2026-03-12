@@ -19,6 +19,37 @@ def list_items():
     return response
 
 
+@items_bp.route("/search", methods=["GET"])
+@jwt_required()
+def search_items():
+    """Search and filter items by name or description (cached for 30 s)."""
+    query = request.args.get("q", "").strip().lower()
+    status = request.args.get("status", "").strip()
+    
+    if not query and not status:
+        return jsonify({"error": "query parameter 'q' or 'status' is required"}), 400
+    
+    items = models.get_all()
+    filtered_items = []
+    
+    for item in items:
+        name_match = query in item.get("name", "").lower() if query else True
+        desc_match = query in item.get("description", "").lower() if query else True
+        status_match = item.get("status") == status if status else True
+        
+        if (name_match or desc_match) and status_match:
+            filtered_items.append(item)
+    
+    response = make_response(jsonify({
+        "items": filtered_items,
+        "total": len(filtered_items),
+        "query": query if query else None,
+        "filters": {"status": status} if status else {}
+    }), 200)
+    response.headers["Cache-Control"] = f"public, max-age={_LIST_CACHE_TTL}"
+    return response
+
+
 @items_bp.route("/<int:item_id>", methods=["GET"])
 @jwt_required()
 def get_item(item_id: int):
@@ -39,7 +70,7 @@ def create_item():
     name = (data.get("name") or "").strip()
     if not name:
         return jsonify({"error": "name is required"}), 400
-    item = models.create(name, data.get("description", ""))
+    item = models.create(name, data.get("description", ""), data.get("status", "active"))
     return jsonify(item), 201
 
 
@@ -48,7 +79,7 @@ def create_item():
 def update_item(item_id: int):
     """Update an existing item."""
     data = request.get_json(silent=True) or {}
-    item = models.update(item_id, data.get("name"), data.get("description"))
+    item = models.update(item_id, data.get("name"), data.get("description"), data.get("status"))
     if item is None:
         return jsonify({"error": "item not found"}), 404
     return jsonify(item), 200
