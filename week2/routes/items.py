@@ -124,3 +124,67 @@ def delete_item(item_id: int):
     if item is None:
         return jsonify({"error": "item not found"}), 404
     return jsonify({"message": "item deleted"}), 200
+
+
+@items_bp.route("/statistics", methods=["GET"])
+@jwt_required()
+def get_items_statistics():
+    """Get aggregated statistics about items (cached for 60 s)."""
+    all_items = models.get_all()
+    
+    # Calculate statistics
+    total_items = len(all_items)
+    status_breakdown = {}
+    items_with_description = 0
+    
+    for item in all_items:
+        # Count by status
+        status = item.get("status", "unknown")
+        status_breakdown[status] = status_breakdown.get(status, 0) + 1
+        
+        # Count items with descriptions
+        if item.get("description"):
+            items_with_description += 1
+    
+    statistics = {
+        "total_items": total_items,
+        "items_with_description": items_with_description,
+        "items_without_description": total_items - items_with_description,
+        "status_breakdown": status_breakdown,
+        "completion_rate": round((items_with_description / total_items * 100), 2) if total_items > 0 else 0
+    }
+    
+    response = make_response(jsonify(statistics), 200)
+    response.headers["Cache-Control"] = f"public, max-age={_ITEM_CACHE_TTL}"
+    return response
+
+
+@items_bp.route("/analytics/recent", methods=["GET"])
+@jwt_required()
+def get_recent_items_analytics():
+    """Get analytics for recently created items (cached for 30 s)."""
+    limit = request.args.get("limit", type=int, default=5)
+    
+    if limit < 1 or limit > 50:
+        return jsonify({"error": "limit must be between 1 and 50"}), 400
+    
+    all_items = models.get_all()
+    
+    # Sort by created_at (most recent first)
+    sorted_items = sorted(
+        all_items,
+        key=lambda x: x.get("created_at", ""),
+        reverse=True
+    )
+    
+    recent_items = sorted_items[:limit]
+    
+    analytics = {
+        "recent_items": recent_items,
+        "count": len(recent_items),
+        "total_items": len(all_items)
+    }
+    
+    response = make_response(jsonify(analytics), 200)
+    response.headers["Cache-Control"] = f"public, max-age={_LIST_CACHE_TTL}"
+    return response
