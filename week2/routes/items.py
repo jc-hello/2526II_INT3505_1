@@ -13,8 +13,39 @@ _ITEM_CACHE_TTL = 60
 @items_bp.route("/", methods=["GET"])
 @jwt_required()
 def list_items():
-    """Return all items (cached for 30 s)."""
-    response = make_response(jsonify(models.get_all()), 200)
+    """Return all items with optional pagination (cached for 30 s)."""
+    # Pagination parameters
+    page = request.args.get("page", type=int, default=1)
+    page_size = request.args.get("page_size", type=int, default=10)
+    
+    # Validate pagination parameters
+    if page < 1:
+        return jsonify({"error": "page must be >= 1"}), 400
+    if page_size < 1 or page_size > 100:
+        return jsonify({"error": "page_size must be between 1 and 100"}), 400
+    
+    all_items = models.get_all()
+    total_items = len(all_items)
+    total_pages = (total_items + page_size - 1) // page_size  # Ceiling division
+    
+    # Calculate pagination indices
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paginated_items = all_items[start_index:end_index]
+    
+    result = {
+        "items": paginated_items,
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_previous": page > 1,
+        }
+    }
+    
+    response = make_response(jsonify(result), 200)
     response.headers["Cache-Control"] = f"public, max-age={_LIST_CACHE_TTL}"
     return response
 
