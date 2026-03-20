@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Library Management API
+  version: 1.0.0
+  description: Demo API quản lý thư viện (sách, thành viên, mượn trả).
+servers:
+  - url: http://localhost:8000
+paths:
+  /books:
+    get:
+      summary: Lấy danh sách sách
+      responses:
+        '200':
+          description: Danh sách sách
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+    post:
+      summary: Tạo sách mới
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookCreate'
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+  /books/{id}:
+    get:
+      summary: Lấy chi tiết sách
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thông tin sách
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Không tìm thấy sách
+  /members:
+    get:
+      summary: Lấy danh sách thành viên
+      responses:
+        '200':
+          description: Danh sách thành viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+    post:
+      summary: Tạo thành viên
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+      responses:
+        '201':
+          description: Đã tạo thành viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+  /loans:
+    post:
+      summary: Mượn sách
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanCreate'
+      responses:
+        '201':
+          description: Đã tạo phiếu mượn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+  /loans/{id}/return:
+    post:
+      summary: Trả sách
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trả sách thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+components:
+  schemas:
+    Book:
+      type: object
+      required: [id, title, author, availableCopies]
+      properties:
+        id:
+          type: string
+          example: B001
+        title:
+          type: string
+          example: Clean Architecture
+        author:
+          type: string
+          example: Robert C. Martin
+        year:
+          type: integer
+          example: 2017
+        availableCopies:
+          type: integer
+          example: 5
+    BookCreate:
+      type: object
+      required: [title, author, availableCopies]
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        year:
+          type: integer
+        availableCopies:
+          type: integer
+    Member:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: string
+          example: M001
+        name:
+          type: string
+          example: Nguyen Van A
+        email:
+          type: string
+          format: email
+    MemberCreate:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    LoanCreate:
+      type: object
+      required: [bookId, memberId]
+      properties:
+        bookId:
+          type: string
+        memberId:
+          type: string
+    Loan:
+      type: object
+      required: [id, bookId, memberId, status, borrowedAt]
+      properties:
+        id:
+          type: string
+          example: L001
+        bookId:
+          type: string
+        memberId:
+          type: string
+        status:
+          type: string
+          enum: [BORROWED, RETURNED]
+        borrowedAt:
+          type: string
+          format: date-time
+        returnedAt:
+          type: string
+          format: date-time

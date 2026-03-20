@@ -1,0 +1,138 @@
+FORMAT: 1A
+HOST: http://localhost:8000
+
+# Library Management API
+
+Demo API quản lý thư viện bằng API Blueprint.
+
+# Group Books
+
+## Books Collection [/books]
+
+### List all books [GET]
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "B001",
+            "title": "Clean Architecture",
+            "author": "Robert C. Martin",
+            "year": 2017,
+            "availableCopies": 5
+          }
+        ]
+
+### Create a new book [POST]
+
++ Request (application/json)
+
+        {
+          "title": "Domain-Driven Design",
+          "author": "Eric Evans",
+          "year": 2003,
+          "availableCopies": 3
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "B002",
+          "title": "Domain-Driven Design",
+          "author": "Eric Evans",
+          "year": 2003,
+          "availableCopies": 3
+        }
+
+## Book Detail [/books/{id}]
+
++ Parameters
+    + id: B001 (string) - Book ID
+
+### Retrieve a book [GET]
+
++ Response 200 (application/json)
+
+        {
+          "id": "B001",
+          "title": "Clean Architecture",
+          "author": "Robert C. Martin",
+          "year": 2017,
+          "availableCopies": 5
+        }
+
++ Response 404
+
+# Group Members
+
+## Members Collection [/members]
+
+### List all members [GET]
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "M001",
+            "name": "Nguyen Van A",
+            "email": "a@example.com"
+          }
+        ]
+
+### Create a member [POST]
+
++ Request (application/json)
+
+        {
+          "name": "Tran Thi B",
+          "email": "b@example.com"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "M002",
+          "name": "Tran Thi B",
+          "email": "b@example.com"
+        }
+
+# Group Loans
+
+## Loans Collection [/loans]
+
+### Borrow a book [POST]
+
++ Request (application/json)
+
+        {
+          "bookId": "B001",
+          "memberId": "M001"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "L001",
+          "bookId": "B001",
+          "memberId": "M001",
+          "status": "BORROWED",
+          "borrowedAt": "2026-03-20T09:30:00Z"
+        }
+
+## Return Loan [/loans/{id}/return]
+
++ Parameters
+    + id: L001 (string) - Loan ID
+
+### Return a borrowed book [POST]
+
++ Response 200 (application/json)
+
+        {
+          "id": "L001",
+          "bookId": "B001",
+          "memberId": "M001",
+          "status": "RETURNED",
+          "borrowedAt": "2026-03-20T09:30:00Z",
+          "returnedAt": "2026-03-25T09:30:00Z"
+        }
