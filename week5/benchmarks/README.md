@@ -1,46 +1,46 @@
-# Phân trang Cơ sở dữ liệu: Offset vs Cursor ⏱️
+# Database Pagination: Offset vs Cursor ⏱️
 
-Thư mục này chứa bộ công cụ mô phỏng và **Benchmark (Đo đạc tốc độ)** để làm rõ lý do tại sao các hệ thống lớn (Facebook, Twitter) lại nói KHÔNG với phân trang Offset/Limit truyền thống ở các thiết kế API hiện đại.
+This folder contains simulation and **benchmarking tools** that explain why large systems (Facebook, Twitter) avoid traditional Offset/Limit pagination in modern API design.
 
-## 🛠 Cách vận hành Demo (Dành cho Giảng Vấn/Sinh viên)
+## 🛠 Demo Workflow (for Instructors/Students)
 
-Với tư cách là người thuyết minh, bạn chỉ cần thực thi 3 bước sau:
+As a presenter, you only need these three steps:
 
-### Bước 1: Khởi tạo Database giả lập
-Kịch bản cần sinh ra 100,000 bản ghi để làm nổi bật sự khác biệt về tốc độ quét vòng lặp của Database.
+### Step 1: Initialize the mock database
+Generate 100,000 rows to make scan-speed differences visible.
 ```bash
 python seed.py
 ```
-*(Lệnh này sẽ tự động khởi dựng file `benchmark.db` nội bộ bằng chuẩn SQLite qua Raw Query trong tích tắc).*
+*(This command creates a local `benchmark.db` SQLite file almost instantly via raw SQL queries.)*
 
-### Bước 2: Kích hoạt API Server
-Chạy máy chủ Backend mô phỏng tương tác truy vấn CSDL:
+### Step 2: Start the API server
+Run the backend server that simulates DB queries:
 ```bash
 uvicorn api:app --port 8001
 ```
 
-### Bước 3: Đo lường tốc độ (Benchmark)
-Mở một tab Terminal mới và nã đạn vào Server để xem thời gian xử lý:
+### Step 3: Run the benchmark
+Open a new terminal tab and send benchmark requests to the server:
 ```bash
 python benchmark.py
 ```
 
 ---
 
-## 🧠 Phân tích kết quả (Kịch bản Giải thích)
+## 🧠 Result Analysis (Presentation Script)
 
-Sau khi chạy `benchmark.py`, bảng kết quả Markdown sẽ hiện ra. Hãy bám vào đó để phân tích kiến trúc cho khán giả:
+After running `benchmark.py`, a Markdown result table appears. Use it to explain the architecture clearly.
 
-### 1. Chiến thuật - Không Phân Trang (`/books/no-page`)
-Truy vấn trực tiếp Database để load `100,000` dòng. 
-* **Nhược điểm:** Server mất nhiều trăm ms lãng phí CPU chỉ để Parse mảng data, chưa kể tốn hàng chục MB RAM/Network. 
-* **Hậu quả:** Dễ gây sập Backend do OOM (Out Of Memory) hoặc thắt cổ chai đường truyền (Bandwidth Bottleneck) của client. 
+### 1. Strategy: No Pagination (`/books/no-page`)
+Directly loads `100,000` rows from the database.
+* **Drawback:** The server spends hundreds of milliseconds and extra CPU just to parse a huge data array, plus heavy RAM/network usage.
+* **Impact:** Higher risk of backend failure from OOM (Out Of Memory) or client bandwidth bottlenecks.
 
-### 2. Chiến thuật - Offset/Limit (`/books/offset`)
-Khi người dùng cuộn tới cuối trang sâu, ví dụ lấy bản ghi mốc thứ `95,000`. Lệnh `OFFSET 95000 LIMIT 20` bắt ép Database phải **chạy đếm scan và vứt bỏ** toàn bộ `95,000` bản ghi trước đó để lọc ra được 20 dòng cuối.
-* **Hậu quả:** Thời gian `Query Time` tỉ lệ thuận tuyến tính $\mathcal{O}(N)$ với độ sâu của trang hiện tại. Trang càng sâu -> Trải nghiệm người dùng càng chậm dần. Lãng phí số lượt Disk I/O khổng lồ vô ích.
+### 2. Strategy: Offset/Limit (`/books/offset`)
+When users scroll deep (for example, around row `95,000`), `OFFSET 95000 LIMIT 20` forces the database to **scan and discard** 95,000 rows before returning the final 20.
+* **Impact:** Query time grows linearly, $\mathcal{O}(N)$, with page depth. Deeper pages become slower and waste significant disk I/O.
 
-### 3. Chiến thuật - Cursor Pagination (`/books/cursor`)
-Cũng lấy dữ liệu mốc đó nhưng API đặt câu hỏi khác đi CSDL: *"Lấy cho tôi 20 bản ghi có Primary Key `id` lớn hơn cột mốc trên màn hình hiện tại (id > 95000)"*. 
-* **Ưu điểm:** Nhờ bản chất cột `id` đã được đánh chỉ mục **B-Tree Index**, Database rẽ thẳng nhánh BTree đến vị trí node `95000` mất một lượng thời gian cố định cực nhỏ, tiệm cận $\mathcal{O}(1)$ hay chính xác hơn là $\mathcal{O}(\log n)$, hoàn toàn không cần quét bảng đếm từng dòng rác.
-* **Kết quả Benchmark:** Tốc độ Cursor Pagination **nhanh gấp > 25 lần** Offset và luôn duy trì được tốc độ chớp nhoáng dẫu DB có nặng hàng tỷ Dữ Liệu!
+### 3. Strategy: Cursor Pagination (`/books/cursor`)
+For the same checkpoint, the API asks the DB differently: *"Give me 20 rows with primary key `id` greater than the current checkpoint (`id > 95000`)"*.
+* **Advantage:** Because `id` is indexed (B-Tree), the DB jumps directly to node `95000` in near-constant practical time, often modeled as $\mathcal{O}(\log n)$, without scanning discarded rows.
+* **Benchmark Result:** Cursor pagination is typically **over 25x faster** than offset pagination and remains stable even as the dataset grows dramatically.

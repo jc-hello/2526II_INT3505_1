@@ -21,7 +21,7 @@ def print_data_sample(data_list):
 def test_endpoint(name, url):
     total_time = 0
     server_time = 0
-    print(f"Đang gọi: {name} (Lặp {ITERATIONS} lần)...")
+    print(f"Calling: {name} (Run {ITERATIONS} times)...")
     last_data = None
     for _ in range(ITERATIONS):
         start = time.time()
@@ -33,58 +33,58 @@ def test_endpoint(name, url):
         server_time += data.get("db_query_time_ms", 0)
         last_data = data
         
-    avg_latency = (total_time / ITERATIONS) * 1000 # ms
-    avg_server = (server_time / ITERATIONS) # Tính sẵn = ms từ server trả về
+    avg_latency = (total_time / ITERATIONS) * 1000  # ms
+    avg_server = (server_time / ITERATIONS)  # Already in ms from server response
     
-    print(f"\n=> Mẫu dữ liệu lấy được ({name}):")
+    print(f"\n=> Retrieved data sample ({name}):")
     print_data_sample(last_data.get("data", []))
-    print(f"=> Thời gian DB trung bình: {avg_server:.3f} ms")
+    print(f"=> Average DB time: {avg_server:.3f} ms")
     
     return avg_server, avg_latency
 
 def main():
     print(f"{'='*65}")
-    print(f" BÁO CÁO BENCHMARK PHÂN TRANG (Mốc Offset/Cursor = {OFFSET})")
+    print(f" PAGINATION BENCHMARK REPORT (Offset/Cursor checkpoint = {OFFSET})")
     print(f"{'='*65}")
     
-    # 1. No pagination (Chỉ 1 lần test vì tải cực nặng lên DB cache)
-    print("\n[Chiến thuật 1] Không phân trang")
-    print("Test: Đang lấy trọn vẹn 100,000 bản ghi...")
+    # 1. No pagination (single run because this puts heavy load on DB/cache)
+    print("\n[Strategy 1] No pagination")
+    print("Test: retrieving all 100,000 rows...")
     start_time = time.time()
     res = requests.get(f"{API_BASE}/no-page?limit=100000")
     no_page_latency = (time.time() - start_time) * 1000
     data = res.json()
     no_page_server = data.get("db_query_time_ms", 0)
-    print(f"\n=> Mẫu dữ liệu lấy được (Không Phân Trang):")
+    print(f"\n=> Retrieved data sample (No pagination):")
     print_data_sample(data.get("data", []))
-    print(f"=> Số lượng bản ghi lấy về: {data.get('count_fetched')}")
-    print(f"=> Thời gian lấy (DB): {no_page_server:.3f} ms")
+    print(f"=> Number of fetched rows: {data.get('count_fetched')}")
+    print(f"=> DB time: {no_page_server:.3f} ms")
     print(f"=> HTTP Latency: {no_page_latency:.3f} ms")
-    input("\nBấm Enter (next) để tiếp tục...")
+    input("\nPress Enter to continue...")
     
     # 2. Offset Pagination
-    print("\n[Chiến thuật 2] Offset Pagination")
+    print("\n[Strategy 2] Offset Pagination")
     os, _l_os = test_endpoint("Offset Pagination", f"{API_BASE}/offset?offset={OFFSET}&limit=20")
-    input("\nBấm Enter (next) để tiếp tục...")
+    input("\nPress Enter to continue...")
     
     # 3. Cursor Pagination
-    print("\n[Chiến thuật 3] Cursor Pagination")
+    print("\n[Strategy 3] Cursor Pagination")
     cs, _l_cs = test_endpoint("Cursor Pagination", f"{API_BASE}/cursor?cursor_id={OFFSET}&limit=20")
-    input("\nBấm Enter (next) để xem bảng kết quả...")
+    input("\nPress Enter to show the result table...")
     
-    # Print bảng Markdown
-    print("\n[+] BẢNG SO SÁNH TỐC ĐỘ:")
-    print(f"| {'Chiến thuật':<25} | {'DB Query Time (ms)':<20} | {'HTTP Latency (ms)':<20} |")
+    # Print Markdown table
+    print("\n[+] SPEED COMPARISON TABLE:")
+    print(f"| {'Strategy':<25} | {'DB Query Time (ms)':<20} | {'HTTP Latency (ms)':<20} |")
     print(f"|{'-'*27}|{'-'*22}|{'-'*22}|")
-    print(f"| {'Không Phân Trang (Z->A)':<25} | {no_page_server:<20.3f} | {no_page_latency:<20.3f} |")
+    print(f"| {'No Pagination (Z->A)':<25} | {no_page_server:<20.3f} | {no_page_latency:<20.3f} |")
     print(f"| {'Offset (Skip {OFFSET})':<25} | {os:<20.3f} | {_l_os:<20.3f} |")
     print(f"| {'Cursor (WHERE id > {OFFSET})':<25} | {cs:<20.3f} | {_l_cs:<20.3f} |")
     
-    print(f"\n[+] KẾT LUẬN TỰ ĐỘNG:")
+    print(f"\n[+] AUTO CONCLUSION:")
     if cs < os:
         diff = os / cs if cs > 0 else 999
-        print(f"Phân trang CURSOR nhanh hơn OFFSET tới ~{diff:.1f} lần!")
-        print("-> Giải thích: Offset phải đếm và lặp qua toàn bộ 95k bản ghi rác. Cursor lợi dụng Index B-Tree đi thẳng đến bản ghi 95000 ngay lập tức (Truy xuất O(1)).")
+        print(f"Cursor pagination is ~{diff:.1f}x faster than offset pagination!")
+        print("-> Explanation: Offset must count and iterate through 95k skipped rows. Cursor uses the B-Tree index to jump directly to row 95000 (near O(1) access).")
 
 if __name__ == "__main__":
     main()

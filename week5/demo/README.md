@@ -1,54 +1,54 @@
-# Demo Các Chiến Thuật Phân Trang (Pagination Strategies)
+# Demo of Pagination Strategies
 
-Demo này sử dụng FastAPI để minh họa 3 chiến thuật phân trang khác nhau. Dựa trên `RESOURCE_TREE.md`, endpoint lấy danh sách sách là `GET /books`.Mỗi chiến thuật phân trang được tác ra thành một file chạy (FastAPI app) độc lập.
+This demo uses FastAPI to illustrate three different pagination strategies. Based on `RESOURCE_TREE.md`, the list endpoint is `GET /books`. Each strategy is implemented as an independent runnable FastAPI app.
 
-Các file định nghĩa cấu trúc Response (kiểu trả về) vẫn được đặt riêng biệt ở thư mục `schemas`.
+Response schema definitions are kept separately in the `schemas` folder.
 
-## Cấu trúc thư mục
+## Folder Structure
 
 ```
 week_5/demo/
-├── offset_limit_demo.py     # Demo chạy FastAPI cho phân trang dạng Offset/Limit
-├── page_based_demo.py       # Demo chạy FastAPI cho phân trang dạng Page-based
-├── cursor_based_demo.py     # Demo chạy FastAPI cho phân trang dạng Cursor-based
-├── models.py                # Định nghĩa data model (thực thể Books chung)
-├── schemas/                 # Chứa các file định nghĩa kiểu trả về của Response
-│   ├── offset_limit.py      # Định nghĩa Response của Offset/Limit
-│   ├── page_based.py        # Định nghĩa Response của Page-based
-│   └── cursor_based.py      # Định nghĩa Response của Cursor-based
-└── README.md                # Tài liệu hướng dẫn này
+├── offset_limit_demo.py     # FastAPI demo for Offset/Limit pagination
+├── page_based_demo.py       # FastAPI demo for Page-based pagination
+├── cursor_based_demo.py     # FastAPI demo for Cursor-based pagination
+├── models.py                # Shared data model (Book entity)
+├── schemas/                 # Response schema definitions
+│   ├── offset_limit.py      # Response schema for Offset/Limit
+│   ├── page_based.py        # Response schema for Page-based
+│   └── cursor_based.py      # Response schema for Cursor-based
+└── README.md                # This guide
 ```
 
-## Giải thích chi tiết các Chiến thuật (Strategy)
+## Detailed Strategy Explanations
 
 ### 1. Offset / Limit Pagination
-**File khởi chạy:** `offset_limit_demo.py`
-**File định nghĩa model response:** `schemas/offset_limit.py`
-**API Definition:** `GET /books?offset=0&limit=20`
+**Runner file:** `offset_limit_demo.py`
+**Response schema file:** `schemas/offset_limit.py`
+**API definition:** `GET /books?offset=0&limit=20`
 
-* **Cách hoạt động:** Bỏ qua `offset` số lượng bản ghi và lấy `limit` bản ghi tiếp theo.
-* **Mô hình Dữ liệu Trả về:** Gồm `items` (danh sách bản ghi), `total` (tổng số lượng record), `offset` và `limit` hiện tại.
-* **Ưu điểm:** Dễ hiểu và dễ dàng map với SQL `OFFSET / LIMIT`.
-* **Nhược điểm:** Hiệu suất giảm nghiêm trọng khi `offset` lớn do DB vẫn phải đọc qua các record bị bỏ qua. Bị sai lệch dữ liệu nếu có thao tác thêm/xóa xảy ra giữa các lần gọi trang.
+* **How it works:** Skip `offset` records, then return the next `limit` records.
+* **Response model:** Includes `items`, `total`, `offset`, and `limit`.
+* **Pros:** Easy to understand and maps directly to SQL `OFFSET / LIMIT`.
+* **Cons:** Performance degrades significantly at large `offset` values because the DB still scans skipped rows. Data consistency can drift if records are inserted/deleted between page requests.
 
 ### 2. Page-based Pagination (Page / Size)
-**File khởi chạy:** `page_based_demo.py`
-**File định nghĩa model response:** `schemas/page_based.py`
-**API Definition:** `GET /books?page=1&size=20`
+**Runner file:** `page_based_demo.py`
+**Response schema file:** `schemas/page_based.py`
+**API definition:** `GET /books?page=1&size=20`
 
-* **Cách hoạt động:** Chỉ định trang thứ `page`, mỗi trang có kích thước `size`. Bản chất thường chuyển đổi thành `offset` ngầm bên dưới (`offset = (page - 1) * size`).
-* **Mô hình Dữ liệu Trả về:** Gồm `items`, `total`, `page`, `size` và `total_pages` (tổng số trang).
-* **Ưu điểm:** Phù hợp với giao diện người dùng hiển thị số trang (1, 2, 3...). 
-* **Nhược điểm:** Chung nhược điểm về hiệu suất và sai lệch như Offset/Limit.
+* **How it works:** Specify page number `page` and page size `size`. Internally this is usually converted to offset (`offset = (page - 1) * size`).
+* **Response model:** Includes `items`, `total`, `page`, `size`, and `total_pages`.
+* **Pros:** Friendly for page-number UI patterns (1, 2, 3, ...).
+* **Cons:** Shares the same performance and consistency drawbacks as Offset/Limit.
 
 ### 3. Cursor-based Pagination (Next Token)
-**File khởi chạy:** `cursor_based_demo.py`
-**File định nghĩa model response:** `schemas/cursor_based.py`
-**API Definition:** `GET /books?cursor=10&limit=20`
+**Runner file:** `cursor_based_demo.py`
+**Response schema file:** `schemas/cursor_based.py`
+**API definition:** `GET /books?cursor=10&limit=20`
 
-* **Cách hoạt động:** Dựa vào một giá trị duy nhất và tuần tự (như `id` hoặc `timestamp`) của phần tử cuối cùng để truy vấn phần tử tiếp theo (VD: `WHERE id > cursor LIMIT ...`).
-* **Mô hình Dữ liệu Trả về:** Gồm `items`, `next_cursor` (con trỏ gọi cho trang sau) và `has_next` (còn trang tiếp theo không). Không nhất thiết phải có `total`.
-* **Ưu điểm:** Rất nhanh ngay cả khi phân cấp hàng triệu dòng do tận dụng trực tiếp index Database. Không bị mất mát/trùng lặp dữ liệu trong quá trình thay đổi `insert/delete`.
-* **Nhược điểm:** Không thể nhảy trực tiếp (jump) đến một trang cụ thể nào đó giữa chừng. Chỉ lấy được trang tiếp theo hoặc trang trước. Phải tồn tại một trường có thể sắp xếp và có tính duy nhất (Unique Sortable Column).
+* **How it works:** Uses a unique, ordered value (for example `id` or `timestamp`) from the last item to fetch the next set (e.g., `WHERE id > cursor LIMIT ...`).
+* **Response model:** Includes `items`, `next_cursor`, and `has_next`. `total` is optional and often omitted.
+* **Pros:** Very fast even with millions of rows by leveraging DB indexes directly. Avoids duplicates or missing rows during concurrent inserts/deletes.
+* **Cons:** Cannot jump directly to an arbitrary page; navigation is sequential. Requires a unique sortable column.
 
 

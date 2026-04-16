@@ -2,22 +2,22 @@ from fastapi import FastAPI, Query
 from models import Book
 from schemas.page_based import PageBasedResponse
 
-app = FastAPI(title="Pagination Demo: Page-based", description="Demo chiến thuật phân trang Page-based cho API /books")
+app = FastAPI(title="Pagination Demo: Page-based", description="Page-based pagination strategy demo for API /books")
 
-# Dữ liệu giả lập (Dummy data) cho Books
+# Mock data for books
 db_books = [
-    Book(id=i, title=f"Sách lập trình {i}", author=f"Tác giả {i % 5}", status="available")
+    Book(id=i, title=f"Programming Book {i}", author=f"Author {i % 5}", status="available")
     for i in range(1, 101)
 ]
 
 @app.get("/books", response_model=PageBasedResponse[Book], tags=["Books"])
 def get_books(
-    page: int = Query(1, ge=1, description="Số trang hiện tại (bắt đầu từ 1)"), 
-    size: int = Query(20, ge=1, le=50, description="Kích thước mỗi trang")
+    page: int = Query(1, ge=1, description="Current page number (starting from 1)"),
+    size: int = Query(20, ge=1, le=50, description="Number of items per page")
 ):
     """
     2. Page-based Pagination
-    - Lấy danh sách sách dựa trên số trang (page) và kích thước trang (size).
+    - Retrieve books based on page number and page size.
     """
     offset = (page - 1) * size
     items = db_books[offset : offset + size]

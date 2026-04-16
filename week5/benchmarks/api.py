@@ -14,8 +14,8 @@ def get_db_connection():
 @app.get("/books/no-page")
 def get_books_no_page(limit: int = Query(100000)):
     """
-    Chiến thuật 1: KHÔNG PHÂN TRANG
-    Rút thẳng một lượng khổng lồ. 
+    Strategy 1: NO PAGINATION
+    Fetch a very large result set directly.
     """
     conn = get_db_connection()
     start_time = time.time()
@@ -38,8 +38,8 @@ def get_books_no_page(limit: int = Query(100000)):
 @app.get("/books/offset")
 def get_books_offset(offset: int = Query(90000), limit: int = 20):
     """
-    Chiến thuật 2: OFFSET PAGINATION (Cách Cũ)
-    Lấy offset 90k, tức là bắt DB quét và SKIP 90k dòng trước khi lấy 20 dòng.
+    Strategy 2: OFFSET PAGINATION (legacy approach)
+    Using offset 90k forces the DB to scan and skip 90k rows before returning 20 rows.
     """
     conn = get_db_connection()
     start_time = time.time()
@@ -62,14 +62,14 @@ def get_books_offset(offset: int = Query(90000), limit: int = 20):
 @app.get("/books/cursor")
 def get_books_cursor(cursor_id: int = Query(90000), limit: int = 20):
     """
-    Chiến thuật 3: CURSOR PAGINATION (Cách Tối Ưu)
-    Nhảy thẳng đến mốc `id = 90000` thông qua Index Primary Key B-Tree.
+    Strategy 3: CURSOR PAGINATION (optimized approach)
+    Jump directly to `id = 90000` using the primary key B-Tree index.
     """
     conn = get_db_connection()
     start_time = time.time()
     
     cursor = conn.cursor()
-    # Dùng WHERE id > thay vì offset
+    # Use WHERE id > instead of OFFSET
     cursor.execute("SELECT * FROM books WHERE id > ? ORDER BY id ASC LIMIT ?", (cursor_id, limit))
     rows = cursor.fetchall()
     

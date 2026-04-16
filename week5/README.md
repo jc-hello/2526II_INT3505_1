@@ -1,21 +1,20 @@
+## Documentation Reading Guide
 
-## Hướng dẫn Đọc Tài liệu
+To understand the design mindset and business context before reviewing the code, read the documents in this order:
 
-Để hiểu rõ tư duy thiết kế và bối cảnh trước khi xem code, vui lòng đọc các tài liệu theo thứ tự sau:
+1. **[CONTEXT.md](./CONTEXT.md):** Read first. Understand the domain context of the library management system and its core entities (Users, Books, Loans).
+2. **[PLAN.md](./PLAN.md):** Read second. Learn the 4-step methodology that transforms real business context into API design.
+3. **[RESOURCE_TREE.md](./RESOURCE_TREE.md):** Read third. Review the final endpoint (URI) map.
 
-1. **[CONTEXT.md](./CONTEXT.md):** Đọc đầu tiên. Nắm bắt bối cảnh nghiệp vụ (Domain Context) của hệ thống quản lý thư viện và các thực thể cốt lõi (Users, Books, Loans).
-2. **[PLAN.md](./PLAN.md):** Đọc thứ hai. Hiểu phương pháp luận 4 bước để chuyển đổi từ nghiệp vụ thực tế sang thiết kế API.
-3. **[RESOURCE_TREE.md](./RESOURCE_TREE.md):** Đọc thứ ba. Xem kết quả bản đồ các Endpoints (URIs) đã được thiết kế hoàn chỉnh.
+## Demo Code Guide
 
-## Hướng dẫn xem Code Demo
+While the resource architecture is described in detail in the Markdown files, the **code demo** focuses on practical implementation of three common pagination strategies. Data modeling is implemented in the main server app where database setup and ORM-based access already exist.
 
-Trong khi kiến trúc tài nguyên được mô tả chi tiết ở các file Markdown, phần **Code Demo** tập trung vào việc cài đặt thực tế 3 chiến lược Phân trang (Pagination) thường gặp nhất. Riêng phần Data modeling thì được cài đặt ở serer/app chính vì ở đó đã cài database và phương thức giao tiếp với database là ORM nên sẽ tiện hơn.
+**Demo source code location:** [./demo](./demo)
 
-**Mã nguồn Demo nằm tại thư mục:** `[./demo](./demo)`
+Examples in `./demo` simulate query and response behavior for:
+- **Offset/Limit Pagination** (common and easy to implement, but slower on large datasets).
+- **Page-based Pagination** (UI-friendly).
+- **Cursor-based Pagination** (very high performance, suitable for infinite scroll).
 
-Các ví dụ trong thư mục `./demo` sẽ mô phỏng cách truy vấn và trả về dữ liệu cho các kỹ thuật:
-- **Offset/Limit Pagination** (Phổ biến, dễ cài đặt nhưng chậm với dữ liệu lớn).
-- **Page-based Pagination** (Thân thiện với UI).
-- **Cursor-based Pagination** (Hiệu năng cực cao, phù hợp cho Infinite Scroll).
-
-*Lưu ý: Code demo sử dụng dữ liệu giả lập (mock data) để minh họa luồng xử lý (logic flow) thay vì kết nối với một database thực tế phức tạp.*
+*Note: The demo code uses mock data to illustrate logic flow rather than connecting to a complex real database.*

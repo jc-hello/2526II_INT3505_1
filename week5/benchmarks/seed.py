@@ -9,10 +9,10 @@ def seed_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # Xoá bảng nếu đã tồn tại
+    # Drop table if it already exists
     cursor.execute("DROP TABLE IF EXISTS books")
     
-    # Tạo bảng
+    # Create table
     cursor.execute("""
         CREATE TABLE books (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,17 +22,17 @@ def seed_database():
         )
     """)
     
-    print(f"Bắt đầu seed {TOTAL_RECORDS} bản ghi để thử nghiệm phân trang...")
+    print(f"Start seeding {TOTAL_RECORDS} rows for pagination benchmarking...")
     start_time = time.time()
     
-    # Chuẩn bị dữ liệu mẫu
+    # Prepare sample data
     authors = ["John Doe", "Jane Smith", "Bob Martin", "Martin Fowler", "Robert C. Martin"]
     
-    # Insert theo batch cho cực nhanh
+    # Insert in batches for better performance
     batch_size = 10000
     for i in range(0, TOTAL_RECORDS, batch_size):
         records = [
-            (f"Cuốn sách số {j}", random.choice(authors), round(random.uniform(10.0, 100.0), 2))
+            (f"Book #{j}", random.choice(authors), round(random.uniform(10.0, 100.0), 2))
             for j in range(i + 1, i + batch_size + 1)
         ]
         cursor.executemany(
@@ -40,9 +40,9 @@ def seed_database():
             records
         )
         conn.commit()
-        print(f" -> Đã insert {i + batch_size} bản ghi...")
+        print(f" -> Inserted {i + batch_size} rows...")
         
-    print(f"Hoàn tất trong {time.time() - start_time:.2f} giây.")
+    print(f"Completed in {time.time() - start_time:.2f} seconds.")
     conn.close()
 
 if __name__ == "__main__":
