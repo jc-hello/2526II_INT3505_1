@@ -1,34 +1,33 @@
-# Kiến thức và Demo liên quan đến phát triển API
+# API Development Knowledge and Demo
 
-## Nội dung cụ thể
+## Scope
 
-**Kiến thức cần đạt:**
+**Knowledge goals:**
 
-- So sánh JWT vs OAuth 2.0
-- Hiểu các khái niệm: bearer token, refresh token, scopes, roles
+- Compare JWT vs OAuth 2.0.
+- Understand bearer token, refresh token, scopes, and roles.
 
-**Kỹ năng cần làm được:**
+**Skill goals:**
 
-- Triển khai JWT authentication cho một API đơn giản
-- Phát hiện và đề xuất khắc phục rủi ro bảo mật (token leakage, replay attack)
+- Implement JWT authentication for a simple API.
+- Identify and propose mitigations for security risks (token leakage, replay attack).
 
+**Practice tasks:**
 
-**Thực hành:**
+- Add JWT authentication to the backend.
+- Run a security audit: check whether the sample API leaks tokens.
 
-- Thêm JWT vào backend
-- Security audit: Kiểm tra API mẫu có bị lộ token không?
+## Expected Outputs
 
-## Đầu ra dự kiến
+**Knowledge documents**
 
-**Tài liệu kiến thức**
+All knowledge documents are in the `week6` folder:
 
-Tất cả tài liệu kiến thức được viết ở thư mục week_6
-
-- file markdown so sánh JWT và OAuth 2.0, file này cần giải thích rõ JWT là gì, OAuth 2.0 là gì và so sánh toàn diện về JWT và OAuth 2.0
-- file markdown kiến thức giải thích về bearer token, refresh token, scopes, roles
-- file markdown mô tả nội dung demo sẽ được triển khai
+- A markdown file comparing JWT and OAuth 2.0, explaining each clearly and comparing them comprehensively.
+- A markdown file explaining bearer token, refresh token, scopes, and roles.
+- A markdown file describing the planned demo content.
 
 **Demo**
 
-- yêu cầu code best practice vào api đang có là server
-- các code demo nhỏ được dùng để minh họa cho kiến thức (nếu có) ở thư mục week_6
+- Apply best-practice code to the existing server API.
+- Add small demo code snippets (if needed) in `week6` to illustrate concepts.

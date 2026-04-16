@@ -1,66 +1,66 @@
-# 1. So sánh JWT và OAuth 2.0 & Ý nghĩa của Bearer Token
+# 1. JWT vs OAuth 2.0 and the Meaning of Bearer Token
 
-Trong phát triển Web API, chúng ta cần cơ chế xác thực rốt ráo vì HTTP mặc định là vô trạng thái (Stateless). **Bearer Token** là "chìa khóa" phổ biến nhất, giúp server nhận diện Client mà không cần phải gọi Database để xác thực thông tin user name/password trong từng request.
+In Web API development, strong authentication is required because HTTP is stateless by default. A **Bearer Token** is the most common key that helps the server identify a client without checking username/password in the database for every request.
 
-## 1.1 Bearer Token là gì?
+## 1.1 What Is a Bearer Token?
 
-**Bearer Token** dịch nôm na là "Token của người mang/chứa nó". 
-Giống như việc bạn cầm một tấm vé xem phim: nhân viên rạp không cần biết TÊN bạn là gì, chỉ cần bạn CÓ CẦM vé (bearer) hợp lệ, họ sẽ cho bạn vào.
+A **Bearer Token** means the token is valid for whoever carries it.
+Think of a movie ticket: the staff does not need your name; they only need a valid ticket in your hand.
 
-Trong HTTP Request, Bearer Token được gửi trong Header:
+In an HTTP request, a bearer token is sent in the header:
 ```http
-Authorization: Bearer <token_string_ở_đây>
+Authorization: Bearer <token_string_here>
 ```
 
 > [!WARNING]
-> Vì đặc tính "Ai cầm nó thì là chủ nhân", nếu token bị lộ (Leakage), kẻ gian hoàn toàn có thể giả mạo danh tính của bạn. Do đó, Bearer Token LUÔN LUÔN phải được gửi qua đường truyền mã hóa chuẩn **HTTPS**.
+> Because this model treats the holder as the owner, leaked tokens can be abused for impersonation. Therefore, bearer tokens must always be sent over **HTTPS**.
 
 ---
 
-## 1.2 Json Web Token (JWT)
+## 1.2 JSON Web Token (JWT)
 
-**JWT (JSON Web Token)** là một định dạng cụ thể, mã hóa thành chuỗi (để dùng làm Bearer token).
+**JWT (JSON Web Token)** is a specific token format, serialized as a compact string (often used as a bearer token).
 
-**Đặc điểm:** Tự chứa dữ liệu (Self-contained). Nó lưu sẵn thông tin của User (như ID, Role). Khi gửi JWT lên, Server giải mã nó và biết ngay ông A thuộc Role B mà **KHÔNG CẦN CHỌC VÀO DATABASE**.
+**Key property:** It is self-contained. It carries user information (for example ID and role). When the server receives a JWT, it can decode and validate it without hitting the database for every request.
 
-### Cấu trúc JWT (3 phần)
-Một JWT gồm 3 phần cách nhau bằng dấu chấm `.`: `Header.Payload.Signature`
+### JWT Structure (3 Parts)
+A JWT has three dot-separated parts: `Header.Payload.Signature`.
 
-1. **Header:** Chứa thuật toán mã hóa (VD: HS256).
-2. **Payload:** Chứa claims (dữ liệu thật sự như `user_id`, `role`, `nbf`, `exp` - hạn dùng).
-3. **Signature:** Chữ ký số dùng để **chống giả mạo**. Nếu kẻ thù sửa Payload, chữ ký sẽ không khớp! (Server sinh chữ ký bằng `SECRET_KEY`).
+1. **Header:** Defines the signing algorithm (for example `HS256`).
+2. **Payload:** Contains claims (for example `user_id`, `role`, `nbf`, `exp`).
+3. **Signature:** A digital signature that prevents tampering. If payload data is modified, signature validation fails.
 
 > [!CAUTION]
-> JWT có thể được giải mã (Base64 decode) để đọc Payload. Đừng bao giờ lưu Data nhạy cảm (Password, mã số thẻ) trong Payload. Hãy xem file `demo_1_jwt_anatomy.py` để hình dung.
+> JWT payloads can be Base64-decoded and read. Never store sensitive data (passwords, card numbers) in the payload.
 
 ---
 
-## 1.3 OAuth 2.0 là gì?
+## 1.3 What Is OAuth 2.0?
 
-Nhiều người lầm tưởng JWT và OAuth 2.0 là 2 đối thủ cạnh tranh, kiểu "Dùng JWT hay dùng OAuth?". Thực tế, chúng **không cùng đẳng cấp**.
-- **JWT** là ĐỊNH DẠNG một cái "Thẻ chứng minh" (Token format).
-- **OAuth 2.0** là MỘT QUY TRÌNH (Framework/Protocol) hướng dẫn CÁCH CẤP/CHIA SẺ CÁI THẺ ĐÓ cho bên thứ 3 an toàn.
+Many people think JWT and OAuth 2.0 are alternatives, but they are different layers.
+- **JWT** is a token format.
+- **OAuth 2.0** is an authorization framework/protocol for safely issuing and delegating token-based access to third parties.
 
-**Ví dụ bài toán thư viện:**
-Bạn (`User`) sử dụng website A.
-Website A yêu cầu lấy danh sách sách đã mượn của bạn từ ứng dụng Thư Viện (`Server`).
-- Nếu dùng cơ chế mật khẩu, Trang A sẽ đòi bạn gõ Mật khẩu Thư viện của bạn. Cực kì nguy hiểm!
-- **Giải pháp OAuth 2.0:** Bạn đăng nhập thẳng ở màn hình của Thư Viện, sau đó Thư viện sẽ cấp một cái **Access Token** (thường format chính là JWT) cho trang A. Trang A cầm thẻ JWT đó để đọc sách của bạn thay mặt bạn!
+**Library example:**
+You (`User`) use website A.
+Website A wants to access your borrowed-book list from the library app (`Server`).
+- If website A asks for your library password directly, that is unsafe.
+- **OAuth 2.0 solution:** You authenticate on the library's own login page, and the library issues an **access token** (often a JWT) to website A. Website A then uses that token on your behalf.
 
 ---
 
-## 1.4 Bảng so sánh dễ hiểu
+## 1.4 Practical Comparison Table
 
-| Tiêu chí | JWT | OAuth 2.0 |
+| Criteria | JWT | OAuth 2.0 |
 | :--- | :--- | :--- |
-| **Bản chất** | Một định dạng chuỗi token mang theo dữ liệu (Format). | Một quy trình ủy quyền (Protocol/Framework). |
-| **Vai trò** | Là "tấm vé" (Vé vào cửa chứa thông tin). | Là quy trình "xin/phát vé/ủy quyền". |
-| **Mục đích** | Truyền tải thông tin an toàn giữa các bên (Authentication). | Cấp quyền cho app bên thứ 3 truy cập tài nguyên (Authorisation). |
-| **Độ phức tạp** | Rất dễ triển khai: Client login -> Server trả JWT. | Phức tạp (Cần Authorization Server, Client ID, Secret, callback...). |
-| **Khả năng ứng dụng**| Dùng làm Access Token bên trong quá trình OAuth 2.0. | Xây dựng tính năng "Login with Google", "Login with Facebook". |
+| **Nature** | A token data format. | An authorization protocol/framework. |
+| **Role** | The "ticket" carrying claims. | The process to request/issue/delegate that ticket. |
+| **Goal** | Carry authenticated claims securely between parties. | Grant third-party apps controlled access to resources. |
+| **Complexity** | Simple flow: client login -> server issues JWT. | More complex: auth server, client ID/secret, redirect callbacks, etc. |
+| **Typical use** | Often used as an access token format inside OAuth 2.0 flows. | Enables features like "Login with Google" / "Login with Facebook". |
 
 ---
 
-## 1.5 Kết luận
+## 1.5 Conclusion
 
-Trong API `Server` của chúng ta, các endpoint như gọi phiếu mượn `/loans/` không cần uỷ quyền cho bên thứ 3. Do đó, ta **chỉ cần áp dụng JWT (Authentication) cơ bản**, không cần cài toàn bộ flow OAuth 2.0 phức tạp. Tuy nhiên, theo quy ước của FastAPI, cơ chế nhận Token từ form login sẽ sử dụng scheme `OAuth2PasswordBearer` (Một nhánh flow nhỏ nhất của OAuth2 nhằm sinh token và gán cho Bearer).
+In our API server, endpoints such as `/loans/` do not require third-party delegation. So basic JWT-based authentication is sufficient and full OAuth 2.0 flows are unnecessary. In FastAPI, token extraction from login flows is commonly wired through `OAuth2PasswordBearer`.
