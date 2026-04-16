@@ -13,7 +13,7 @@ def get_products(db: Session, name: str = None, min_price: float = None, max_pri
     return query.all()
 
 def create_product(db: Session, product: ProductCreate):
-    # Sử dụng model_dump() thay cho dict() trong Pydantic V2
+    # Use model_dump() instead of dict() in Pydantic v2
     db_product = db_models.DBProduct(**product.model_dump())
     db.add(db_product)
     db.commit()

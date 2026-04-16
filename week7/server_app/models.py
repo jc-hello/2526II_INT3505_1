@@ -8,10 +8,10 @@ from pydantic import BaseModel, Field
 
 
 class Product(BaseModel):
-    id: int = Field(..., description='Mã định danh ID')
-    name: str = Field(..., description='Tên sản phẩm')
-    price: float = Field(..., description='Giá tiền (thực)')
-    stock_quantity: int = Field(..., description='Số lượng còn lại trong kho')
+    id: int = Field(..., description='Product ID')
+    name: str = Field(..., description='Product name')
+    price: float = Field(..., description='Product price')
+    stock_quantity: int = Field(..., description='Remaining stock quantity')
 
 
 class ProductCreate(BaseModel):

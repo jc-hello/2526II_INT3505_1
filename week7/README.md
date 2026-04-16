@@ -1,45 +1,45 @@
-# Hướng dẫn Chạy Tự Động Hóa Backend Cơ Bản - Tuần 7
+# Basic Backend Automation Guide - Week 7
 
-Tài liệu này dùng để lưu lại các dòng lệnh bắt buộc trong quá trình sinh code tự động (Codegen), với tiêu chí: Thuần Python, Tốc độ cao và Tương thích 100% hệ điều hành Windows.
+This document records the required commands for automatic backend code generation (Codegen) with goals of pure Python tooling, high speed, and Windows compatibility.
 
-## Bước 1: Cài đặt Bộ Công Cụ
-Mở Terminal, chạy lệnh cài đặt thư viện chuyên dụng cho Python:
+## Step 1: Install the Tooling
+Open a terminal and install the required Python packages:
 
 ```bash
-# Thư viện sinh code tự động
+# Code generation library
 pip install fastapi-code-generator
 
-# Cài đặt sẵn FastAPI và Uvicorn để lát nữa chạy Web Server
+# Install FastAPI and Uvicorn for running the web server
 pip install fastapi uvicorn pydantic
 ```
 
-## Bước 2: Kích hoạt Auto-Generate Code
-Đảm bảo Terminal đang trỏ vào thư mục `week_7` (nơi có chứa file thiết kế `openapi.yaml`). Chạy lệnh:
+## Step 2: Trigger Auto-Generation
+Make sure your terminal is in the `week7` folder (which contains `openapi.yaml`). Run:
 
 ```bash
 fastapi-codegen --input openapi.yaml --output ./server_app
 ```
 
-## Bước 3: Chạy thử Server (API rỗng)
-Để hệ thống tự động nối kết (Resolve Imports) các file tự sinh mà không bị lỗi đứt gãy, bạn **phải ĐỨNG Ở NGOÀI** (tại thư mục `week_7`) và chạy trực tiếp nó dưới dạng Package Module:
+## Step 3: Run the generated server (empty API)
+To resolve imports correctly for generated files, run the server from the `week7` folder as a package module:
 
 ```bash
 uvicorn server_app.main:app --port 8080 --reload
 ```
 
-Mở trình duyệt, truy cập `http://localhost:8080/docs` để kiểm tra.
+Open `http://localhost:8080/docs` in a browser to verify.
 
-## Bước 4: Chuyển đổi thành System Live (Kết nối Database SQLite)
+## Step 4: Turn It Into a Live System (SQLite Integration)
 
-Để hệ thống tự sinh có thể lưu trữ dữ liệu thật, ta cần viết bổ sung tầng Data Access theo mô hình Clean Architecture.
+To persist real data, add a data access layer following clean architecture principles.
 
-**4.1. Cài đặt thư viện ORM:**
+**4.1. Install ORM package:**
 ```bash
 pip install sqlalchemy
 ```
 
-**4.2. Khởi tạo Engine Database (`database.py`):**
-Tạo file `server_app/database.py` để làm nhiệm vụ kết nối với tệp SQLite cục bộ.
+**4.2. Initialize database engine (`database.py`):**
+Create `server_app/database.py` to manage the local SQLite connection.
 ```python
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -57,8 +57,8 @@ def get_db():
         db.close()
 ```
 
-**4.3. Khai báo Bảng CSDL (`db_models.py`):**
-Tạo file `server_app/db_models.py`. Đây là nơi ánh xạ Schema OpenAPI thành Bảng (Table) thực.
+**4.3. Declare DB table mapping (`db_models.py`):**
+Create `server_app/db_models.py` to map OpenAPI schema fields to a real database table.
 ```python
 from sqlalchemy import Column, Integer, String, Float
 from .database import Base
@@ -72,25 +72,24 @@ class DBProduct(Base):
     stock_quantity = Column(Integer)
 ```
 
-**4.4. Cài đặt các Logic CRUD (`product_repo.py`):**
-Tạo file `server_app/product_repo.py`. File này đóng gói các kỹ thuật truy xuất dữ liệu (Kéo, Thêm, Sửa, Xoá) gọi bằng ngôn ngữ Python.
-*(Chi tiết các hàm CRUD được đóng gói thành các function riêng biệt để tái sử dụng)*.
+**4.4. Implement CRUD logic (`product_repo.py`):**
+Create `server_app/product_repo.py`. This file wraps database operations (read/create/update/delete) as reusable Python functions.
 
-**4.5. Nhúng Data vào Mã Tự Sinh (`main.py`):**
-Mở file trung tâm `server_app/main.py`. Ta khai báo Import và thay thế các hàm rỗng (chứa `pass`) bằng dữ liệu thật (Cơ chế Dependency Injection).
+**4.5. Inject data layer into generated code (`main.py`):**
+Open `server_app/main.py`, add imports, and replace placeholder `pass` handlers with real implementations using dependency injection.
 
-*Hành động 1: Gọi lệnh khởi tạo DB ở đầu file*
+*Action 1: Initialize DB tables near the top of the file*
 ```python
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .database import engine, get_db
 from . import db_models, product_repo
 
-# Đúc cấu trúc bảng vào tệp SQLite
+# Create tables in SQLite
 db_models.Base.metadata.create_all(bind=engine)
 ```
 
-*Hành động 2: Thay thế `pass` tại các Endpoints bằng Hàm Repo*
+*Action 2: Replace `pass` in endpoints with repository calls*
 ```python
 @app.post('/products', response_model=Product, status_code=status.HTTP_201_CREATED, tags=['Products'])
 def create_product(body: ProductCreate, db: Session = Depends(get_db)) -> Product:
@@ -103,9 +102,9 @@ def get_products(
     return product_repo.get_products(db, name, min_price, max_price)
 ```
 
-**4.6. Khởi chạy và Kiểm chứng:**
-Bật Server:
+**4.6. Run and verify:**
+Start the server:
 ```bash
 uvicorn server_app.main:app --port 8080 --reload
 ```
-Lên Swagger (`http://localhost:8080/docs`), gọi thử lệnh `POST /products`. Bạn sẽ thấy một file `sqlite_demo.db` xuất hiện.
+Open Swagger at `http://localhost:8080/docs` and call `POST /products`. You should see `sqlite_demo.db` created.

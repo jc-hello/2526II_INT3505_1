@@ -13,12 +13,12 @@ from .models import Product, ProductCreate
 from .database import engine, get_db
 from . import db_models, product_repo
 
-# Khởi tạo bảng CSDL SQLite
+# Initialize SQLite database tables
 db_models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title='Swagger Codegen Demo API',
-    description='API quản lý Products, dùng để demo tự động sinh Backend FastAPI và kết nối với database.',
+    description='Product management API used to demo FastAPI backend code generation and database integration.',
     version='1.0.0',
     servers=[
         {'url': 'http://localhost:8000', 'description': 'Local development server'}
@@ -34,7 +34,7 @@ def get_products(
     db: Session = Depends(get_db)
 ) -> List[Product]:
     """
-    Lấy danh sách sản phẩm
+    Get product list.
     """
     return product_repo.get_products(db, name=name, min_price=min_price, max_price=max_price)
 
@@ -47,7 +47,7 @@ def get_products(
 )
 def create_product(body: ProductCreate, db: Session = Depends(get_db)) -> Product:
     """
-    Tạo sản phẩm mới
+    Create a new product.
     """
     return product_repo.create_product(db, body)
 
@@ -55,11 +55,11 @@ def create_product(body: ProductCreate, db: Session = Depends(get_db)) -> Produc
 @app.get('/products/{productId}', response_model=Product, tags=['Products'])
 def get_product_by_id(product_id: int = Path(..., alias='productId'), db: Session = Depends(get_db)) -> Product:
     """
-    Lấy chi tiết một sản phẩm theo ID
+    Get product details by ID.
     """
     db_product = product_repo.get_product_by_id(db, product_id)
     if not db_product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sản phẩm")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     return db_product
 
 
@@ -68,19 +68,19 @@ def update_product(
     product_id: int = Path(..., alias='productId'), body: ProductCreate = ..., db: Session = Depends(get_db)
 ) -> Product:
     """
-    Cập nhật thông tin toàn bộ một sản phẩm
+    Update an entire product record.
     """
     db_product = product_repo.update_product(db, product_id, body)
     if not db_product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sản phẩm")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     return db_product
 
 
 @app.delete('/products/{productId}', status_code=status.HTTP_204_NO_CONTENT, tags=['Products'])
 def delete_product(product_id: int = Path(..., alias='productId'), db: Session = Depends(get_db)) -> None:
     """
-    Xóa một sản phẩm
+    Delete a product.
     """
     success = product_repo.delete_product(db, product_id)
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sản phẩm")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")

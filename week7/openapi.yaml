@@ -1,45 +1,45 @@
 openapi: 3.0.3
 info:
   title: Swagger Codegen Demo API
-  description: API quản lý Products, dùng để demo tự động sinh Backend FastAPI và kết nối với database.
+  description: Product management API used to demo FastAPI backend code generation and database integration.
   version: 1.0.0
 servers:
   - url: http://localhost:8000
     description: Local development server
 tags:
   - name: Products
-    description: Các API thực hiện CRUD đối với Sản phẩm
+    description: CRUD APIs for products
 paths:
   /products:
     get:
       tags:
         - Products
-      summary: Lấy danh sách sản phẩm
+      summary: Get product list
       operationId: get_products
       parameters:
         - name: name
           in: query
-          description: Tìm kiếm gần đúng theo tên
+          description: Partial-match name filter
           required: false
           schema:
             type: string
         - name: min_price
           in: query
-          description: Khoảng giá thấp nhất
+          description: Minimum price filter
           required: false
           schema:
             type: number
             format: float
         - name: max_price
           in: query
-          description: Khoảng giá cao nhất
+          description: Maximum price filter
           required: false
           schema:
             type: number
             format: float
       responses:
         '200':
-          description: Thành công trả về danh sách
+          description: Successfully returned list
           content:
             application/json:
               schema:
@@ -49,7 +49,7 @@ paths:
     post:
       tags:
         - Products
-      summary: Tạo sản phẩm mới
+      summary: Create a new product
       operationId: create_product
       requestBody:
         required: true
@@ -59,7 +59,7 @@ paths:
               $ref: '#/components/schemas/ProductCreate'
       responses:
         '201':
-          description: Sản phẩm được tạo thành công
+          description: Product created successfully
           content:
             application/json:
               schema:
@@ -68,7 +68,7 @@ paths:
     get:
       tags:
         - Products
-      summary: Lấy chi tiết một sản phẩm theo ID
+      summary: Get product details by ID
       operationId: get_product_by_id
       parameters:
         - name: productId
@@ -78,17 +78,17 @@ paths:
             type: integer
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
         '404':
-          description: Không tìm thấy sản phẩm
+          description: Product not found
     put:
       tags:
         - Products
-      summary: Cập nhật thông tin toàn bộ một sản phẩm
+      summary: Update an entire product record
       operationId: update_product
       parameters:
         - name: productId
@@ -104,17 +104,17 @@ paths:
               $ref: '#/components/schemas/ProductCreate'
       responses:
         '200':
-          description: Bản ghi đã được cập nhật
+          description: Record updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
         '404':
-          description: Không tìm thấy sản phẩm
+          description: Product not found
     delete:
       tags:
         - Products
-      summary: Xóa một sản phẩm
+      summary: Delete a product
       operationId: delete_product
       parameters:
         - name: productId
@@ -124,9 +124,9 @@ paths:
             type: integer
       responses:
         '204':
-          description: Xóa thành công (No content trả về)
+          description: Deleted successfully (no content returned)
         '404':
-          description: Không tìm thấy sản phẩm
+          description: Product not found
 
 components:
   schemas:
@@ -140,20 +140,20 @@ components:
       properties:
         id:
           type: integer
-          description: Mã định danh ID
+          description: Product ID
         name:
           type: string
-          description: Tên sản phẩm
+          description: Product name
         price:
           type: number
           format: float
-          description: Giá tiền (thực)
+          description: Product price
         stock_quantity:
           type: integer
-          description: Số lượng còn lại trong kho
+          description: Remaining stock quantity
     ProductCreate:
       type: object
-      description: Schema dùng riêng cho Post và Put (Bỏ thuộc tính ID do CSDL tự tăng)
+      description: Schema used by POST and PUT (ID omitted because DB auto-increments it)
       required:
         - name
         - price

@@ -3,18 +3,18 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sqlite_demo.db"
 
-# Khởi tạo engine kết nối SQLite
+# Initialize SQLite connection engine
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
-# Khởi tạo phiên làm việc (Session)
+# Initialize DB session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class cho các DB Model
+# Base class for DB models
 Base = declarative_base()
 
-# Dependency dùng trong FastAPI Router
+# Dependency for FastAPI routers
 def get_db():
     db = SessionLocal()
     try:

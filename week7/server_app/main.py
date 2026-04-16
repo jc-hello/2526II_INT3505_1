@@ -12,7 +12,7 @@ from .models import Product, ProductCreate
 
 app = FastAPI(
     title='Swagger Codegen Demo API',
-    description='API quản lý Products, dùng để demo tự động sinh Backend FastAPI và kết nối với database.',
+    description='Product management API used to demo FastAPI backend code generation and database integration.',
     version='1.0.0',
     servers=[
         {'url': 'http://localhost:8000', 'description': 'Local development server'}
@@ -27,7 +27,7 @@ def get_products(
     max_price: Optional[float] = None,
 ) -> List[Product]:
     """
-    Lấy danh sách sản phẩm
+    Get product list.
     """
     pass
 
@@ -40,7 +40,7 @@ def get_products(
 )
 def create_product(body: ProductCreate) -> Optional[Product]:
     """
-    Tạo sản phẩm mới
+    Create a new product.
     """
     pass
 
@@ -48,7 +48,7 @@ def create_product(body: ProductCreate) -> Optional[Product]:
 @app.get('/products/{productId}', response_model=Product, tags=['Products'])
 def get_product_by_id(product_id: int = Path(..., alias='productId')) -> Product:
     """
-    Lấy chi tiết một sản phẩm theo ID
+    Get product details by ID.
     """
     pass
 
@@ -58,7 +58,7 @@ def update_product(
     product_id: int = Path(..., alias='productId'), body: ProductCreate = ...
 ) -> Product:
     """
-    Cập nhật thông tin toàn bộ một sản phẩm
+    Update an entire product record.
     """
     pass
 
@@ -66,6 +66,6 @@ def update_product(
 @app.delete('/products/{productId}', response_model=None, tags=['Products'])
 def delete_product(product_id: int = Path(..., alias='productId')) -> None:
     """
-    Xóa một sản phẩm
+    Delete a product.
     """
     pass
